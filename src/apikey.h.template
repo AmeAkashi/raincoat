@@ -1,0 +1,7 @@
+#ifndef API_HEADER
+#define API_HEADER
+
+// replace the string with your api key
+const char* const API_KEY = "insert your api key here";
+
+#endif
