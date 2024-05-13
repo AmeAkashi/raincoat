@@ -22,6 +22,6 @@
 
 int args_parse(int argc, char *argv[], char *location, char *days);
 int print_version(void);
-int print_help(char *);
+int print_help(char *self);
 
 #endif

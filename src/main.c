@@ -22,14 +22,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <netdb.h>
 #include <unistd.h>
 #include "apikey.h"
 #include "argsparse.h"
 #include "dataparse.h"
 
-int main(int argc, char *argv[]) {
-    if(argc > 3) {
+int main(int argc, char *argv[])
+{
+    if (argc > 3) {
         fprintf(stderr, "Usage: %s [OPTION] [LOCATION]\n", argv[0]);
         return 1;
     }
@@ -49,15 +51,15 @@ int main(int argc, char *argv[]) {
     strcpy(days, "1");
     strcpy(location, "23.7527,90.3899");
 
-    if(argc > 1) {
+    if (argc > 1) {
         int args_return = args_parse(argc, argv, location, days);
-        if(args_return == 1) {
+        if (args_return == 1) {
             return 0;
         }
-        if(args_return == 2) {
+        if (args_return == 2) {
             return 1;
         }
-        if(args_return == 3) {
+        if (args_return == 3) {
             return 4;
         }
     }
@@ -72,19 +74,19 @@ int main(int argc, char *argv[]) {
 
     int server_error = getaddrinfo(node, service, &hints, &res);
 
-    if(server_error) {
+    if (server_error) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(server_error));
         return 2;
     }
 
-    for(resptr = res; resptr != NULL; resptr = resptr->ai_next) {
+    for (resptr = res; resptr != NULL; resptr = resptr->ai_next) {
         sockfd = socket(resptr->ai_family, resptr->ai_socktype, resptr->ai_protocol);
 
-        if(sockfd == -1) {
+        if (sockfd == -1) {
             continue;
         }
 
-        if(connect(sockfd, resptr->ai_addr, resptr->ai_addrlen) != -1) {
+        if (connect(sockfd, resptr->ai_addr, resptr->ai_addrlen) != -1) {
             break;
         }
 
@@ -93,25 +95,37 @@ int main(int argc, char *argv[]) {
 
     freeaddrinfo(res);
 
-    if(resptr == NULL) {
+    if (resptr == NULL) {
         fprintf(stderr, "Could not connect!\n");
         return 2;
+    }
+
+    struct timeval timeout;
+    timeout.tv_sec = 15;
+    timeout.tv_usec = 0;
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == -1) {
+        perror("Failed to set timeout for receive operation\n");
+    }
+
+    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) == -1) {
+        perror("Failed to set timeout for send operation\n");
     }
 
     int total = strlen(request);
     int sent = 0;
     int bytes;
 
-    while(sent < total) {
+    while (sent < total) {
         bytes = write(sockfd, request+sent, total-sent);
 
-        if(bytes == -1) {
+        if (bytes == -1) {
             perror("Error while sending request");
             close(sockfd);
             return 2;
         }
 
-        if(!bytes) {
+        if (!bytes) {
             break;
         }
 
@@ -121,7 +135,7 @@ int main(int argc, char *argv[]) {
     int buffer_size = atoi(days)*20480;
     response = (char *) calloc(buffer_size, sizeof(char));
     
-    if(response == NULL) {
+    if (response == NULL) {
         perror("Error while allocating memory");
         close(sockfd);
         return 4;
@@ -130,17 +144,17 @@ int main(int argc, char *argv[]) {
     total = buffer_size-1;
     int received = 0;
 
-    while(received < total) {
+    while (received < total) {
         bytes = read(sockfd, response+received, total-received);
 
-        if(bytes == -1) {
+        if (bytes == -1) {
             perror("Error while receiving response");
             close(sockfd);
             free(response);
             return 2;
         }
 
-        if(!bytes) {
+        if (!bytes) {
             break;
         }
 
@@ -149,7 +163,7 @@ int main(int argc, char *argv[]) {
 
     close(sockfd);
 
-    if(received >= total) {
+    if (received >= total) {
         fprintf(stderr, "The response buffer ran out of memory while receiving response from server\n");
         free(response);
         return 2;
@@ -158,15 +172,15 @@ int main(int argc, char *argv[]) {
     char status[100];
     memset(status, 0, 100*sizeof(char));
 
-    for(int i=0; i<99; i++) {
-        if(response[i] == '\r' && response[i+1] == '\n') {
+    for (int i=0; i<99; i++) {
+        if (response[i] == '\r' && response[i+1] == '\n') {
             break;
         }
 
         status[i] = response[i];
     }
 
-    if(strcmp(status, "HTTP/1.1 200 OK") && 
+    if (strcmp(status, "HTTP/1.1 200 OK") && 
        strcmp(status, "HTTP/1.1 400 Bad Request") && 
        strcmp(status, "HTTP/1.1 401 Unauthorized") && 
        strcmp(status, "HTTP/1.1 403 Forbidden")) {
@@ -177,8 +191,8 @@ int main(int argc, char *argv[]) {
     
     int body_start = 0;
 
-    for(int i=0; i<received-4; i++) {
-        if(response[i] == '\r' && response[i+1] == '\n' && response[i+2] == '\r' && response[i+3] == '\n') {
+    for (int i=0; i<received-4; i++) {
+        if (response[i] == '\r' && response[i+1] == '\n' && response[i+2] == '\r' && response[i+3] == '\n') {
             body_start = i+4;
             break;
         }
@@ -190,7 +204,7 @@ int main(int argc, char *argv[]) {
     int data_return = print_data(response_body);
     free(response);
 
-    if(data_return == 1) {
+    if (data_return == 1) {
         return 3;
     }
 

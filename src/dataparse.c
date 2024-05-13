@@ -22,7 +22,8 @@
 #include "cjson/cJSON.h"
 #include "dataparse.h"
 
-int print_data(char *jsondata) {
+int print_data(char *jsondata)
+{
     const cJSON *location = NULL;
     const cJSON *name = NULL;
     const cJSON *country = NULL;
@@ -40,7 +41,7 @@ int print_data(char *jsondata) {
 
     cJSON *data = cJSON_Parse(jsondata);
 
-    if(data == NULL) {
+    if (data == NULL) {
         fprintf(stderr, "print_data: Error while parsing the json data\n");
         cJSON_Delete(data);
         return 1;
@@ -48,7 +49,7 @@ int print_data(char *jsondata) {
 
     error = cJSON_GetObjectItemCaseSensitive(data, "error");
 
-    if(error != NULL) {
+    if (error != NULL) {
         message = cJSON_GetObjectItemCaseSensitive(error, "message");
         fprintf(stderr, "%s\n", message->valuestring);
         cJSON_Delete(data);
@@ -80,7 +81,7 @@ int print_data(char *jsondata) {
         cJSON *each = NULL;
         cJSON_ArrayForEach(each, hour) {
             cJSON *time_epoch = cJSON_GetObjectItemCaseSensitive(each, "time_epoch");
-            if(time_epoch->valuedouble < localtime_epoch->valuedouble) {
+            if (time_epoch->valuedouble < localtime_epoch->valuedouble) {
                 continue;
             }
             cJSON *time = cJSON_GetObjectItemCaseSensitive(each, "time");

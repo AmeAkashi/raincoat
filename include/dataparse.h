@@ -20,6 +20,6 @@
 #ifndef DATA_HEADER
 #define DATA_HEADER
 
-int print_data(char*);
+int print_data(char *jsondata);
 
 #endif
