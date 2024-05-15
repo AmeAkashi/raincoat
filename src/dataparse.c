@@ -66,6 +66,14 @@ int print_data(char *jsondata)
     condition = cJSON_GetObjectItemCaseSensitive(current, "condition");
     text = cJSON_GetObjectItemCaseSensitive(condition, "text");
 
+    if (location == NULL || name == NULL || country == NULL ||
+        tzone == NULL || localtime_epoch == NULL || current == NULL ||
+        temperature == NULL || condition == NULL || text == NULL) {
+        fprintf(stderr, "print_data: Missing necessary json tags!\n");
+        cJSON_Delete(data);
+        return 1;
+    }
+
     printf("%s, %s  Time Zone: %s  %.0f°C  %s\n",
             name->valuestring,
             country->valuestring,
@@ -78,17 +86,39 @@ int print_data(char *jsondata)
 
     cJSON_ArrayForEach(item, forecastday) {
         cJSON *hour = cJSON_GetObjectItemCaseSensitive(item, "hour");
+
+        if (hour == NULL) {
+            fprintf(stderr, "print_data: Missing necessry json tags!\n");
+            cJSON_Delete(data);
+            return 1;
+        }
+        
         cJSON *each = NULL;
         cJSON_ArrayForEach(each, hour) {
             cJSON *time_epoch = cJSON_GetObjectItemCaseSensitive(each, "time_epoch");
+            
+            if (time_epoch == NULL) {
+                fprintf(stderr, "print_data: Missing necessary json tags!\n");
+                cJSON_Delete(data);
+                return 1;
+            }
+
             if (time_epoch->valuedouble < localtime_epoch->valuedouble) {
                 continue;
             }
+
             cJSON *time = cJSON_GetObjectItemCaseSensitive(each, "time");
             cJSON *htemperature = cJSON_GetObjectItemCaseSensitive(each, "temp_c");
             cJSON *hcondition = cJSON_GetObjectItemCaseSensitive(each, "condition");
             cJSON *htext = cJSON_GetObjectItemCaseSensitive(hcondition, "text");
             cJSON *chance_of_rain = cJSON_GetObjectItemCaseSensitive(each, "chance_of_rain");
+
+            if (time == NULL || htemperature == NULL || hcondition == NULL ||
+                htext == NULL || chance_of_rain == NULL) {
+                fprintf(stderr, "print_data: Missing necessary json tags!\n");
+                cJSON_Delete(data);
+                return 1;
+            }
 
             printf("%s  Temp:%4.0f°C  Rain:%3.0f%%  %s\n",
                     time->valuestring,

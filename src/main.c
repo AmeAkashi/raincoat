@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     char status[100];
     memset(status, 0, 100*sizeof(char));
 
-    for (int i=0; i<99; i++) {
+    for (int i = 0; i < 99; i++) {
         if (response[i] == '\r' && response[i+1] == '\n') {
             break;
         }
@@ -191,9 +191,9 @@ int main(int argc, char *argv[])
     
     int body_start = 0;
 
-    for (int i=0; i<received-4; i++) {
+    for (int i = 0; i < received-4; i++) {
         if (response[i] == '\r' && response[i+1] == '\n' && response[i+2] == '\r' && response[i+3] == '\n') {
-            body_start = i+4;
+            body_start = i + 4;
             break;
         }
     }
