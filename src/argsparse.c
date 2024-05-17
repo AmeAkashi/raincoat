@@ -52,7 +52,7 @@ int args_parse(int argc, char *argv[], char *location, char *days)
                 }
             }
 
-            char *temp = (char *) malloc(size + (3*spacecounter + 1)*sizeof(char));
+            char *temp = (char *) calloc(size + (3*spacecounter + 1), sizeof(char));
 
             if (temp == NULL) {
                 perror("Error while allocating memory");
