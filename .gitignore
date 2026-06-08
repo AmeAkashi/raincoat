@@ -7,4 +7,5 @@ src/apikey.h
 bin/debug/*
 bin/release/*
 TODO
+compile_commands.json
 !.gitkeep
