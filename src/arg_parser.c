@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "argsparse.h"
+#include "arg_parser.h"
 
 int args_parse(int argc, char *argv[], char *location, char *days)
 {

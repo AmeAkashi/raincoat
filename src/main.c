@@ -25,9 +25,9 @@
 #include <sys/time.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "apikey.h"
-#include "argsparse.h"
-#include "dataparse.h"
+#include "api_key.h"
+#include "arg_parser.h"
+#include "data_parser.h"
 
 int main(int argc, char *argv[])
 {

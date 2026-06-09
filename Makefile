@@ -1,12 +1,16 @@
 CC = gcc
-CFLAGS = -Wall -iquote include -iquote lib -O3
-DBGFLAGS = -Wall -iquote include -iquote lib -Og -g
+CFLAGS = -Wall -Wextra -iquote include -iquote lib -O2
+DBGFLAGS = -Wall -Wextra -iquote include -iquote lib -Og -g
 
-OBJS_ := main.o argsparse.o dataparse.o cJSON.o
+OBJS_ := main.o arg_parser.o data_parser.o cJSON.o
 OBJS := $(addprefix obj/,$(OBJS_))
 DBGOBJS := $(addprefix obj/debug/,$(OBJS_))
 
-.PHONY : clean install all
+.PHONY : clean install all release debug
+
+release : bin/release/raincoat
+
+debug : bin/debug/raincoat
 
 all : bin/release/raincoat bin/debug/raincoat
 
@@ -15,13 +19,13 @@ all : bin/release/raincoat bin/debug/raincoat
 bin/release/raincoat : $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-obj/main.o : src/main.c src/apikey.h include/argsparse.h include/dataparse.h
+obj/main.o : src/main.c src/api_key.h include/arg_parser.h include/data_parser.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/argsparse.o : src/argsparse.c include/argsparse.h
+obj/arg_parser.o : src/arg_parser.c include/arg_parser.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-obj/dataparse.o : src/dataparse.c include/dataparse.h lib/cjson/cJSON.h
+obj/data_parser.o : src/data_parser.c include/data_parser.h lib/cjson/cJSON.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 obj/cJSON.o : lib/cjson/cJSON.c lib/cjson/cJSON.h
@@ -32,13 +36,13 @@ obj/cJSON.o : lib/cjson/cJSON.c lib/cjson/cJSON.h
 bin/debug/raincoat : $(DBGOBJS)
 	$(CC) $(DBGFLAGS) -o $@ $^
 
-obj/debug/main.o : src/main.c src/apikey.h include/argsparse.h include/dataparse.h
+obj/debug/main.o : src/main.c src/api_key.h include/arg_parser.h include/data_parser.h
 	$(CC) $(DBGFLAGS) -c -o $@ $<
 
-obj/debug/argsparse.o : src/argsparse.c include/argsparse.h
+obj/debug/arg_parser.o : src/arg_parser.c include/arg_parser.h
 	$(CC) $(DBGFLAGS) -c -o $@ $<
 
-obj/debug/dataparse.o : src/dataparse.c include/dataparse.h lib/cjson/cJSON.h
+obj/debug/data_parser.o : src/data_parser.c include/data_parser.h lib/cjson/cJSON.h
 	$(CC) $(DBGFLAGS) -c -o $@ $<
 
 obj/debug/cJSON.o : lib/cjson/cJSON.c lib/cjson/cJSON.h

@@ -3,7 +3,7 @@
 *.lib
 *.exe
 *.out
-src/apikey.h
+src/api_key.h
 bin/debug/*
 bin/release/*
 TODO
