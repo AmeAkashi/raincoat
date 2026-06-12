@@ -19,99 +19,184 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <string.h>
+#include <errno.h>
 #include "arg_parser.h"
 
-int args_parse(int argc, char *argv[], char *location, char *days)
+int parse_args(int argc, char *argv[], char *location, char *days)
 {
-    int loc_flag = 0;
-    int days_flag = 0;
+    int opt;
+    unsigned short flag = 0;
 
-    for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i],"-V") || !strcmp(argv[i],"--version")) {
-            print_version();
-            return 1;
+    while (1) {
+        static struct option long_options[] = {
+            {"help", no_argument, 0, 'h'},
+            {"version", no_argument, 0, 'V'},
+            {"city", required_argument, 0, 'c'},
+            {"days", required_argument, 0, 'd'}
+        };
+
+        opt = getopt_long(argc, argv, "hVc:d:", long_options, NULL);
+
+        if (opt == -1) {
+            break;
         }
-        if (!strcmp(argv[i],"-h") || !strcmp(argv[i],"--help")) {
-            print_help(argv[0]);
-            return 1;
-        }
-        if (!strcmp(argv[i],"-1") || !strcmp(argv[i],"-2") || !strcmp(argv[i],"-3")) {
-            if (!days_flag) {
-                days[0] = argv[i][1];
-                days[1] = '\0';
-                days_flag = 1;
-            }
-        } else if (!loc_flag) {
-            int size = strlen(argv[i]);
-            int spacecounter = 0;
 
-            for (int j = 0; j < size; j++) {
-                if (argv[i][j] == ' ') {
-                    spacecounter++;
+        switch (opt) {
+            case 'h':
+                print_help(argv[0]);
+                return 1;
+
+            case 'V':
+                print_version();
+                return 1;
+
+            case 'c':
+                if (flag & 1) {
+                    fprintf(stderr, "Usage: %s [-h] [-V] [-c location] [-d days]\n", argv[0]);
+                    return 2;
                 }
-            }
 
-            char *temp = (char *) calloc(size + (3*spacecounter + 1), sizeof(char));
-
-            if (temp == NULL) {
-                perror("Error while allocating memory");
-                return 3;
-            }
-
-            int index = 0;
-
-            for (int j = 0; j < size; j++) {
-                if (argv[i][j] == ' ') {
-                    temp[index] = '%';
-                    temp[index+1] = '2';
-                    temp[index+2] = '0';
-                    index += 3;
-                } else {
-                    temp[index] = argv[i][j];
-                    index++;
+                flag = flag | 1;
+                int l_return = parse_location(location, optarg);
+                
+                if (l_return == 1) {
+                    return 2;
                 }
-            }
+                
+                if (l_return == 2) {
+                    return 3;
+                }
+                break;
 
-            if (strlen(temp) > 40) {
-                fprintf(stderr, "Location name can have a maximum length of 40 characters\n");
-                free(temp);
+            case 'd':
+                if ((flag & 2) >> 1) {
+                    fprintf(stderr, "Usage: %s [-h] [-V] [-c location] [-d days]\n", argv[0]);
+                    return 2;
+                }
+
+                flag = flag | 2;
+                int d_return = parse_days(days, optarg);
+                
+                if (d_return == 1) {
+                    return 2;
+                }
+                break;
+
+            default:
+                fprintf(stderr, "Usage: %s [-h] [-V] [-c location] [-d days]\n", argv[0]);
                 return 2;
-            }
-            strcpy(location, temp);
-            free(temp);
-            loc_flag = 1;
         }
     }
-    
+
+    return 0;
+}
+
+int parse_location(char *location, char *optarg)
+{
+    int length = strlen(optarg);
+
+    if (!(length) || (optarg[0] == '-'))  {
+        fprintf(stderr, "\'-c, --city\' option is missing proper argument\n");
+        return 1;
+    }
+
+    int space_counter = 0;
+
+    for (int i = 0; i < length; i++) {
+        if (optarg[i] == ' ') {
+         space_counter++;
+        }
+    }
+
+    int size = length + 3*space_counter + 1;
+
+    if (size > 41) {
+        fprintf(stderr, "Location name can have a maximum length of 40 characters\n");
+        return 1;
+    }
+
+    char *temp = (char *) calloc(size, sizeof(char));
+
+    if (temp == NULL) {
+        perror("parse_location");
+        return 2;
+    }
+
+    int temp_index = 0;
+
+    for (int i = 0; i < length; i++) {
+        if (optarg[i] == ' ') {
+            temp[temp_index] = '%';
+            temp[temp_index+1] = '2';
+            temp[temp_index+2] = '0';
+            temp_index += 3;
+        } else {
+            temp[temp_index] = optarg[i];
+            temp_index++;
+        }
+    }
+
+    strcpy(location, temp);
+    free(temp);
+
+    return 0;
+}
+
+int parse_days(char *days, char *optarg) {
+    int length = strlen(optarg);
+
+    if (!(length) || (optarg[0] == '-')) {
+        fprintf(stderr, "\'-d, --days\' option is missing proper argument\n");
+        return 1;
+    }
+
+    errno = 0;
+    long value = strtol(optarg, NULL, 10);
+
+    if (errno) {
+        perror("strtol");
+        return 1;
+    }
+
+    if (value < 1 || value > 3) {
+        fprintf(stderr, "\'-d, --days\' option takes 1, 2 or 3 as argument\n");
+        return 1;
+    }
+
+    strcpy(days, optarg);
+
     return 0;
 }
 
 int print_version(void)
 {
-    printf("raincoat 0.1.1\n\n");
+    printf("raincoat 0.2.1\n");
     printf("Copyright (C) 2024 Shadman Saquib Abir\n");
     printf("License GPLv3+: GNU GPL version 3 or later <https://www.gnu.org/licenses/>\n");
     printf("This program is free software: see the source for copying conditions. There\n");
     printf("is NO WARRANTY; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
     printf("Written by Shadman Saquib Abir\n");
+
     return 0;
 }
 
 int print_help(char *self)
 {
-    printf("Usage: %s [OPTION] [LOCATION]\n\n", self);
+    printf("Usage: %s [-h] [-V] [-c location] [-d days]\n\n", self);
     printf("raincoat displays hourly weather (temperature, probability of rain, condition)\n");
-    printf("forecasts for up to 3 days at the specified LOCATION (default is Dhaka). The\n");
+    printf("forecasts for up to 3 days at the specified location (default is Dhaka). The\n");
     printf("forecast data is collected from <https://www.weatherapi.com>\n\n");
     printf("Options:\n");
-    printf("  -1                    display forecast data for the current date\n");
-    printf("  -2                    display forecast data for the current date and the next date\n");
-    printf("  -3                    display forecast data for 3 days\n");
     printf("  -V, --version         display version information and exit\n");
-    printf("  -h, --help            display this help file and exit\n\n");
+    printf("  -h, --help            display this help file and exit\n");
+    printf("  -c, --city=location   display forecast data of the city specified by the \'location\'\n");
+    printf("                        argument\n");
+    printf("  -d, --days=days       display forecast data for the number of days specified by the\n");
+    printf("                        \'days\' argument. Valid values are 1, 2 or 3.\n\n");
     printf("*Location*\n");
-    printf("  LOCATION parameter can have a maximum length of 40 characters. It supports any of\n");
+    printf("  location argument can have a maximum length of 40 characters. It supports any of\n");
     printf("  the following formats:\n");
     printf("  • City name e.g.: Bonn\n");
     printf("  • Use double quotes for names containing whitespaces e.g.: \"Cape Town\"\n");
@@ -124,10 +209,10 @@ int print_help(char *self)
     printf("  • auto:ip IP lookup e.g.: auto:ip\n");
     printf("  • IP address (IPv4 and IPv6 supported) e.g.: 100.0.0.1\n\n");
     printf("Examples:\n");
-    printf("  raincoat                  display hourly weather forecasts of Dhaka\n");
-    printf("  raincoat Bonn             display hourly weather forecasts of Bonn\n");
-    printf("  raincoat -2 Hanoi         display 2 days hourly weather forecasts of Hanoi\n");
-    printf("  raincoat 60.1699,24.9384  display hourly weather forecasts of Helsinki\n\n");
+    printf("  raincoat                     display hourly weather forecasts of Dhaka\n");
+    printf("  raincoat -c Bonn             display hourly weather forecasts of Bonn\n");
+    printf("  raincoat -d 2 --city=Hanoi   display 2 days hourly weather forecasts of Hanoi\n");
+    printf("  raincoat -c 60.1699,24.9384  display hourly weather forecasts of Helsinki\n\n");
     printf("Exit code:\n");
     printf("  0     Successful program execution\n");
     printf("  1     Usage or syntax error\n");

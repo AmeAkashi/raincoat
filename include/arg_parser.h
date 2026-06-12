@@ -20,7 +20,9 @@
 #ifndef ARGS_HEADER
 #define ARGS_HEADER
 
-int args_parse(int argc, char *argv[], char *location, char *days);
+int parse_args(int argc, char *argv[], char *location, char *days);
+int parse_location(char *location, char *optarg);
+int parse_days(char *days, char *optarg);
 int print_version(void);
 int print_help(char *self);
 

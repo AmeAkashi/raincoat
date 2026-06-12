@@ -31,11 +31,6 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc > 3) {
-        fprintf(stderr, "Usage: %s [OPTION] [LOCATION]\n", argv[0]);
-        return 1;
-    }
-
     char *node = "api.weatherapi.com";
     char *service = "80";
     struct addrinfo hints;
@@ -49,16 +44,22 @@ int main(int argc, char *argv[])
     char days[2];
     char location[41];
     strcpy(days, "1");
-    strcpy(location, "23.7527,90.3899");
+    strcpy(location, "dhaka");
 
     if (argc > 1) {
-        int args_return = args_parse(argc, argv, location, days);
+        int args_return = parse_args(argc, argv, location, days);
+        
+        // succesful termination after printing help or version
         if (args_return == 1) {
             return 0;
         }
+
+        // usage or syntax error
         if (args_return == 2) {
             return 1;
         }
+
+        // memory allocation error
         if (args_return == 3) {
             return 4;
         }
