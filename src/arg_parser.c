@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
-#include <errno.h>
 #include "arg_parser.h"
 
 int parse_args(int argc, char *argv[], char *location, char *days)
@@ -152,15 +151,7 @@ int parse_days(char *days, char *optarg) {
         return 1;
     }
 
-    errno = 0;
-    long value = strtol(optarg, NULL, 10);
-
-    if (errno) {
-        perror("strtol");
-        return 1;
-    }
-
-    if (value < 1 || value > 3) {
+    if (strcmp(optarg, "1") && strcmp(optarg, "2") && strcmp(optarg, "3")) {
         fprintf(stderr, "\'-d, --days\' option takes 1, 2 or 3 as argument\n");
         return 1;
     }
