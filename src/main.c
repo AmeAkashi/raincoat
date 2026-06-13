@@ -170,8 +170,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    char status[100];
-    memset(status, 0, 100*sizeof(char));
+    char status[100] = {0};
 
     for (int i = 0; i < 99; i++) {
         if (response[i] == '\r' && response[i+1] == '\n') {
