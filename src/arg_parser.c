@@ -26,7 +26,7 @@
 int parse_args(int argc, char *argv[], char *location, char *days)
 {
     int opt;
-    unsigned short flag = 0;
+    int flag = 0;
 
     while (1) {
         static struct option long_options[] = {
@@ -109,7 +109,9 @@ int parse_location(char *location, char *optarg)
         }
     }
 
-    int size = length + 3*space_counter + 1;
+    // spaces are getting replaced by %20, which is 2 extra bytes per space character
+    // 1 extra byte added is for the null terminator
+    int size = length + 2*space_counter + 1;
 
     if (size > 41) {
         fprintf(stderr, "Location name can have a maximum length of 40 characters\n");
